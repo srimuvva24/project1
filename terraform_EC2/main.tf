@@ -38,10 +38,7 @@ resource "aws_instance" "web" {
 
   user_data = <<-EOF
     #!/bin/bash
-    cd /home/ec2-user/tech-challenge-flask-app-main
-    source venv/bin/activate
-    export TC_DYNAMO_TABLE=Candidates
-    nohup gunicorn -b 0.0.0.0:8000 app:candidates_app &
+    sudo -u ec2-user bash -c "cd /home/ec2-user/tech-challenge-flask-app-main && source venv/bin/activate && export TC_DYNAMO_TABLE=Candidates && nohup gunicorn -b 0.0.0.0:8000 app:candidates_app &"
   EOF
 
   tags = {
