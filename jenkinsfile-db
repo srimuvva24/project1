@@ -64,9 +64,3 @@ pipeline {
         }
     }
 }
-    post {
-        always {
-            echo "Sanity test complete"
-        }
-    }
-}
