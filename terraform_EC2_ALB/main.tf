@@ -1,7 +1,14 @@
+# ---------------------------
+# Provider
+# ---------------------------
 provider "aws" {
   region = "us-east-2"
 }
 
+
+# ---------------------------
+# Data sources for default VPC
+# ---------------------------
 data "aws_vpc" "default" {
   default = true
 }
@@ -13,7 +20,14 @@ data "aws_subnets" "default" {
   }
 }
 
-# Security Group allowing HTTP (8000) and SSH
+# Use existing IAM instance profile
+data "aws_iam_instance_profile" "existing_role_profile" {
+  name = "ec2-instance-profile"
+}
+
+# ---------------------------
+# Security Group
+# ---------------------------
 resource "aws_security_group" "web_sg" {
   name        = "web-sg-1"
   description = "Allow SSH, HTTP 80, and HTTP 8000"
@@ -48,22 +62,18 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# IAM Role Profile
-resource "aws_iam_instance_profile" "existing_role_profile" {
-  name = "ec2-instance-profile"
-  role = "mypocrole"
-}
-
-# EC2 Instances in two default subnets
+# ---------------------------
+# EC2 Instances
+# ---------------------------
 resource "aws_instance" "web" {
   count         = 2
-  ami           = "ami-0863fb82a7836e852"
+  ami           = "ami-0863fb82a7836e852"  # Amazon Linux 2 in us-east-2
   instance_type = "t2.micro"
   key_name      = "mytest"
 
   subnet_id              = element(data.aws_subnets.default.ids, count.index)
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.existing_role_profile.name
+  iam_instance_profile   = data.aws_iam_instance_profile.existing_role_profile.name
 
   user_data = <<-EOF
     #!/bin/bash
@@ -78,7 +88,6 @@ resource "aws_instance" "web" {
 # ---------------------------
 # Conditional ALB + Target Group
 # ---------------------------
-
 resource "aws_lb" "app_lb" {
   count              = var.create_alb ? 1 : 0
   name               = "flask-alb"
@@ -95,12 +104,12 @@ resource "aws_lb" "app_lb" {
 resource "aws_lb_target_group" "app_tg" {
   count    = var.create_alb ? 1 : 0
   name     = "flask-tg"
-  port     = 8000
+  port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
 
   health_check {
-    path                = "/"
+    path                = "/candidates"
     port                = "8000"
     protocol            = "HTTP"
     healthy_threshold   = 2
@@ -122,7 +131,7 @@ resource "aws_lb_target_group_attachment" "tg_attach" {
   port             = 8000
 }
 
-# Listener for ALB (redirect HTTP 80 to target group)
+# Listener for ALB (HTTP 80 → target group)
 resource "aws_lb_listener" "http_listener" {
   count             = var.create_alb ? 1 : 0
   load_balancer_arn = aws_lb.app_lb[0].arn
@@ -133,5 +142,13 @@ resource "aws_lb_listener" "http_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app_tg[0].arn
   }
+}
+
+# ---------------------------
+# Output ALB DNS
+# ---------------------------
+output "alb_dns_name" {
+  value       = var.create_alb ? aws_lb.app_lb[0].dns_name : "ALB not created"
+  description = "DNS name of the ALB (if created)"
 }
 
