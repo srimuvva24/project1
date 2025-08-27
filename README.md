@@ -1,6 +1,6 @@
 # terraform-alb-vpc:
 
-This Terraform project creates an AWS networking setup along with an Application Load Balancer (ALB).
+This Terraform project creates an AWS networking setup
 
 🚀 What This Code Does
 
