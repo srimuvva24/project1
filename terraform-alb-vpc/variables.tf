@@ -30,5 +30,5 @@ variable "availability_zones" {
 variable "create_alb" {
   description = "Whether to create an Application Load Balancer"
   type        = bool
-  default     = true
+  default     = false
 }
