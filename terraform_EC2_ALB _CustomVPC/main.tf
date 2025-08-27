@@ -5,22 +5,23 @@ provider "aws" {
   region = "us-east-2"
 }
 
-
 # ---------------------------
-# Data sources for default VPC
+# Data sources for custom VPC
 # ---------------------------
-data "aws_vpc" "default" {
-  default = true
+data "aws_vpc" "custom" {
+  id = "vpc-01a41952ad8fdc4f9"  # Your custom VPC
 }
 
-data "aws_subnets" "default" {
+data "aws_subnets" "custom" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
+    values = [data.aws_vpc.custom.id]
   }
 }
 
+# ---------------------------
 # Use existing IAM instance profile
+# ---------------------------
 data "aws_iam_instance_profile" "existing_role_profile" {
   name = "ec2-instance-profile"
 }
@@ -29,9 +30,9 @@ data "aws_iam_instance_profile" "existing_role_profile" {
 # Security Group
 # ---------------------------
 resource "aws_security_group" "web_sg" {
-  name        = "web-sg-1"
+  name        = "web-sg-2"
   description = "Allow SSH, HTTP 80, and HTTP 8000"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = data.aws_vpc.custom.id
 
   ingress {
     from_port   = 22
@@ -71,7 +72,7 @@ resource "aws_instance" "web" {
   instance_type = "t2.micro"
   key_name      = "mytest"
 
-  subnet_id              = element(data.aws_subnets.default.ids, count.index)
+  subnet_id              = element(data.aws_subnets.custom.ids, count.index)
   vpc_security_group_ids = [aws_security_group.web_sg.id]
   iam_instance_profile   = data.aws_iam_instance_profile.existing_role_profile.name
 
@@ -94,7 +95,7 @@ resource "aws_lb" "app_lb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_sg.id]
-  subnets            = data.aws_subnets.default.ids
+  subnets            = data.aws_subnets.custom.ids
 
   tags = {
     Name = "flask-alb"
@@ -106,7 +107,7 @@ resource "aws_lb_target_group" "app_tg" {
   name     = "flask-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
+  vpc_id   = data.aws_vpc.custom.id
 
   health_check {
     path                = "/candidates"
@@ -151,4 +152,3 @@ output "alb_dns_name" {
   value       = var.create_alb ? aws_lb.app_lb[0].dns_name : "ALB not created"
   description = "DNS name of the ALB (if created)"
 }
-
