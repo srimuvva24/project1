@@ -113,6 +113,7 @@ resource "aws_route_table_association" "private_assoc" {
 # Security Group for ALB
 # -----------------
 resource "aws_security_group" "alb_sg" {
+  count  = var.create_alb ? 1 : 0
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -138,6 +139,7 @@ resource "aws_security_group" "alb_sg" {
 # Application Load Balancer
 # -----------------
 resource "aws_lb" "alb" {
+  count  = var.create_alb ? 1 : 0
   name               = "my-alb"
   internal           = false
   load_balancer_type = "application"
@@ -155,6 +157,7 @@ resource "aws_lb" "alb" {
 # Target Group
 # -----------------
 resource "aws_lb_target_group" "tg" {
+  count  = var.create_alb ? 1 : 0
   name     = "my-targets"
   port     = 80
   protocol = "HTTP"
@@ -178,6 +181,7 @@ resource "aws_lb_target_group" "tg" {
 # Listener
 # -----------------
 resource "aws_lb_listener" "listener" {
+  count  = var.create_alb ? 1 : 0
   load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
