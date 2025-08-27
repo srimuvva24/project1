@@ -2,6 +2,17 @@ provider "aws" {
   region = "us-east-2"
 }
 
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
 # Security Group allowing HTTP (8000) and SSH
 resource "aws_security_group" "web_sg" {
   name        = "web-sg-1"
@@ -73,6 +84,8 @@ resource "aws_lb" "app_lb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_sg.id]
   subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+ # pick all default subnets
+  subnets = data.aws_subnets.default.ids
 
   tags = {
     Name = "flask-alb"
@@ -84,7 +97,7 @@ resource "aws_lb_target_group" "app_tg" {
   name     = "flask-tg"
   port     = 8000
   protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
+  vpc_id   = data.aws_vpc.default.id
 
   health_check {
     path                = "/"
