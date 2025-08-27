@@ -35,6 +35,7 @@ resource "aws_instance" "web" {
   instance_type = "t2.micro"
   key_name      = "mytest"   # Using your existing key
   security_groups = [aws_security_group.web_sg.name]
+  iam_instance_profile = aws_iam_instance_profile.existing_role_profile.name
 
   user_data = <<-EOF
     #!/bin/bash
@@ -44,5 +45,10 @@ resource "aws_instance" "web" {
   tags = {
     Name = "flask-web-app"
   }
+}
+
+resource "aws_iam_instance_profile" "existing_role_profile" {
+  name = "ec2-instance-profile"
+  role = "mypocrole"  # Replace with your IAM role name
 }
 
