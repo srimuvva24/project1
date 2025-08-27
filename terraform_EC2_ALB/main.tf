@@ -16,7 +16,8 @@ data "aws_subnets" "default" {
 # Security Group allowing HTTP (8000) and SSH
 resource "aws_security_group" "web_sg" {
   name        = "web-sg-1"
-  description = "Allow SSH and HTTP 8000"
+  description = "Allow SSH, HTTP 80, and HTTP 8000"
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     from_port   = 22
@@ -53,15 +54,16 @@ resource "aws_iam_instance_profile" "existing_role_profile" {
   role = "mypocrole"
 }
 
-# EC2 Instances in two AZs
+# EC2 Instances in two default subnets
 resource "aws_instance" "web" {
   count         = 2
   ami           = "ami-0863fb82a7836e852"
   instance_type = "t2.micro"
   key_name      = "mytest"
-  security_groups = [aws_security_group.web_sg.name]
-  iam_instance_profile = aws_iam_instance_profile.existing_role_profile.name
-  availability_zone = element(["us-east-2a", "us-east-2b"], count.index)
+
+  subnet_id              = element(data.aws_subnets.default.ids, count.index)
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.existing_role_profile.name
 
   user_data = <<-EOF
     #!/bin/bash
@@ -83,9 +85,7 @@ resource "aws_lb" "app_lb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_sg.id]
-  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
- # pick all default subnets
-  subnets = data.aws_subnets.default.ids
+  subnets            = data.aws_subnets.default.ids
 
   tags = {
     Name = "flask-alb"
