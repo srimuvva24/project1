@@ -27,3 +27,8 @@ variable "availability_zones" {
   type        = list(string)
   default     = ["us-east-2a", "us-east-2b"]
 }
+variable "create_alb" {
+  description = "Whether to create an Application Load Balancer"
+  type        = bool
+  default     = false
+}
