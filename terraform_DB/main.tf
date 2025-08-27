@@ -2,11 +2,13 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
-}
+resource "aws_dynamodb_table" "candidate_table" {
+  name         = "Candidates"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "CandidateName"
 
-resource "aws_s3_bucket" "test_bucket" {
-  bucket = "tf-sanity-test-bucket-${random_id.bucket_suffix.hex}"
-  acl    = "private"
+  attribute {
+    name = "CandidateName"
+    type = "S"
+  }
 }
