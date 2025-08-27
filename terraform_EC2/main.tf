@@ -31,11 +31,14 @@ resource "aws_security_group" "web_sg" {
 
 # EC2 Instance
 resource "aws_instance" "web" {
+  count         = 2
   ami           = "ami-0863fb82a7836e852"  # Amazon Linux 2 AMI (update for your region)
   instance_type = "t2.micro"
   key_name      = "mytest"   # Using your existing key
   security_groups = [aws_security_group.web_sg.name]
   iam_instance_profile = aws_iam_instance_profile.existing_role_profile.name
+  # Pick AZ based on count index
+  availability_zone = element(["us-east-2a", "us-east-2b"], count.index)
 
   user_data = <<-EOF
     #!/bin/bash
