@@ -30,7 +30,7 @@ data "aws_iam_instance_profile" "existing_role_profile" {
 # Security Group
 # ---------------------------
 resource "aws_security_group" "web_sg" {
-  name        = "web-sg-2"
+  name        = "web-sg-3"
   description = "Allow SSH, HTTP 80, and HTTP 8000"
   vpc_id      = data.aws_vpc.custom.id
 
@@ -91,20 +91,20 @@ resource "aws_instance" "web" {
 # ---------------------------
 resource "aws_lb" "app_lb" {
   count              = var.create_alb ? 1 : 0
-  name               = "flask-alb-1"
+  name               = "flask-alb-2"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_sg.id]
   subnets            = data.aws_subnets.custom.ids
 
   tags = {
-    Name = "flask-alb-1"
+    Name = "flask-alb-2"
   }
 }
 
 resource "aws_lb_target_group" "app_tg" {
   count    = var.create_alb ? 1 : 0
-  name     = "flask-tg-1"
+  name     = "flask-tg-2"
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.custom.id
@@ -120,7 +120,7 @@ resource "aws_lb_target_group" "app_tg" {
   }
 
   tags = {
-    Name = "flask-tg-1"
+    Name = "flask-tg-2"
   }
 }
 
