@@ -75,7 +75,7 @@ resource "aws_instance" "web" {
   subnet_id              = element(data.aws_subnets.custom.ids, count.index)
   vpc_security_group_ids = [aws_security_group.web_sg.id]
   #iam_instance_profile   = data.aws_iam_instance_profile.existing_role_profile.name
-  iam_instance_profile   = "arn:aws:iam::257394454400:instance-profile/mypocrole"
+  iam_instance_profile   = "mypocrole"
   user_data = <<-EOF
     #!/bin/bash
     sudo -u ec2-user bash -c "cd /home/ec2-user/tech-challenge-flask-app-main && source venv/bin/activate && export TC_DYNAMO_TABLE=Candidates && nohup gunicorn -b 0.0.0.0:8000 app:candidates_app &"
