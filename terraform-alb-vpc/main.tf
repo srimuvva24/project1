@@ -143,7 +143,8 @@ resource "aws_lb" "alb" {
   name               = "my-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
+  // security_groups    = [aws_security_group.alb_sg.id]
+  security_groups    = var.create_alb ? [aws_security_group.alb_sg[0].id] : []
   subnets            = aws_subnet.public[*].id
 
   enable_deletion_protection = false
@@ -182,12 +183,12 @@ resource "aws_lb_target_group" "tg" {
 # -----------------
 resource "aws_lb_listener" "listener" {
   count  = var.create_alb ? 1 : 0
-  load_balancer_arn = aws_lb.alb.arn
+  load_balancer_arn = aws_lb.alb[0].arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tg.arn
+    target_group_arn = aws_lb_target_group.tg[0].arn
   }
 }
