@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // TF_DIR = 'terraform_code'
-        TF_DIR = 'terraform-alb-vpc'
+        TF_DIR = 'terraform-DB'
         AWS_REGION = 'us-east-2'
     }
 
