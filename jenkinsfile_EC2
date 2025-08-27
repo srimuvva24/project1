@@ -10,7 +10,7 @@ pipeline {
     }
 
     environment {
-        TF_DIR = 'terraform_DB'
+        TF_DIR = 'terraform_EC2'
         AWS_REGION = 'us-east-2'
     }
 
