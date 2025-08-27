@@ -91,20 +91,20 @@ resource "aws_instance" "web" {
 # ---------------------------
 resource "aws_lb" "app_lb" {
   count              = var.create_alb ? 1 : 0
-  name               = "flask-alb"
+  name               = "flask-alb-1"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_sg.id]
   subnets            = data.aws_subnets.custom.ids
 
   tags = {
-    Name = "flask-alb"
+    Name = "flask-alb-1"
   }
 }
 
 resource "aws_lb_target_group" "app_tg" {
   count    = var.create_alb ? 1 : 0
-  name     = "flask-tg"
+  name     = "flask-tg-1"
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.custom.id
@@ -120,7 +120,7 @@ resource "aws_lb_target_group" "app_tg" {
   }
 
   tags = {
-    Name = "flask-tg"
+    Name = "flask-tg-1"
   }
 }
 
