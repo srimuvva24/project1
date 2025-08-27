@@ -10,7 +10,7 @@ pipeline {
     }
 
     environment {
-        TF_DIR = 'terraform_EC2_ALB'
+        TF_DIR = 'terraform_EC2_ALB_CustomVPC'
         AWS_REGION = 'us-east-2'
     }
 
