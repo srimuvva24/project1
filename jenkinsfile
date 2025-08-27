@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        TF_DIR = 'terraform_code'
+        #TF_DIR = 'terraform_code'
+        TF_DIR = 'terraform-alb-vpc'
         AWS_REGION = 'us-east-2'
     }
 
@@ -30,11 +31,11 @@ pipeline {
             }
         }
 
-        stage('Terraform Apply') {
-            steps {
-                dir("${TF_DIR}") {
-                    sh "terraform apply -auto-approve -var 'aws_region=${AWS_REGION}'"
-                }
+       # stage('Terraform Apply') {
+       #     steps {
+       #         dir("${TF_DIR}") {
+       #             sh "terraform apply -auto-approve -var 'aws_region=${AWS_REGION}'"
+       #         }
             }
         }
     }
