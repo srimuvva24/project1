@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Select whether to apply or destroy Terraform resources'
+        )
+    }
+
+    environment {
+        TF_DIR = 'terraform-alb-vpc'
+        AWS_REGION = 'us-east-2'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/srimuvva24/project1.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan/Destroy Plan') {
+            steps {
+                dir("${TF_DIR}") {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh "terraform plan -var 'aws_region=${AWS_REGION}'"
+                        } else if (params.ACTION == 'destroy') {
+                            sh "terraform plan -destroy -var 'aws_region=${AWS_REGION}'"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Apply/Destroy') {
+            steps {
+                dir("${TF_DIR}") {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh "terraform apply -auto-approve -var 'aws_region=${AWS_REGION}'"
+                        } else if (params.ACTION == 'destroy') {
+                            sh "terraform destroy -auto-approve -var 'aws_region=${AWS_REGION}'"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline execution finished for action: ${params.ACTION}"
+        }
+    }
+}
