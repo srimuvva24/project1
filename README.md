@@ -1,4 +1,4 @@
-# terraform-vpc:
+# terraform-vpc module:
 
 This Terraform project creates an AWS networking setup
 
