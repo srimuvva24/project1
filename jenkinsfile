@@ -36,8 +36,8 @@ pipeline {
        //         dir("${TF_DIR}") {
        //             sh "terraform apply -auto-approve -var 'aws_region=${AWS_REGION}'"
        //         }
-            }
-        }
+       //     }
+      //  }
     }
 
     post {
