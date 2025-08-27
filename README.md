@@ -1,4 +1,4 @@
-# terraform-alb-vpc:
+# terraform-vpc:
 
 This Terraform project creates an AWS networking setup
 
