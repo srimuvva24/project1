@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        // TF_DIR = 'terraform_code'
+        TF_DIR = 'terraform-alb-vpc'
+        AWS_REGION = 'us-east-2'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Pull Terraform code from your repo
+                git branch: 'main', url: 'https://github.com/srimuvva24/project1.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh "terraform plan -var 'aws_region=${AWS_REGION}'"
+                }
+            }
+        }
+
+       // stage('Terraform Apply') {
+       //     steps {
+       //         dir("${TF_DIR}") {
+       //             sh "terraform apply -auto-approve -var 'aws_region=${AWS_REGION}'"
+       //         }
+       //     }
+      //  }
+    }
+
+    post {
+        always {
+            echo "Sanity test complete"
+        }
+    }
+}
