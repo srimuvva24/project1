@@ -16,13 +16,16 @@ pipeline {
                 echo "Triggering SSM command on EC2 to redeploy app..."
 
                   aws ssm send-command \
-                  --targets "Key=instanceIds,Values=$EC2_INSTANCE_ID" \
+                  --targets "Key=instanceIds,Values=$EC2_INSTANCE_IDS" \
                   --document-name "AWS-RunShellScript" \
                   --comment "Deploy Flask App" \
                   --parameters 'commands=[
                     "cd /home/ec2-user",
+                    "rm -rf tech-challenge-flask-app-main || true",
+                    "rm -f '$S3_OBJECT' || true",
                     "aws s3 cp s3://'$S3_BUCKET'/'$S3_OBJECT' /home/ec2-user/",
-                    "unzip -o /home/ec2-user/'$S3_OBJECT' -d tech-challenge-flask-app-main",
+                    "mkdir -p tech-challenge-flask-app-main",
+                    "unzip -o /home/ec2-user/'$S3_OBJECT' -d tech-challenge-flask-app-main --strip-components 1",
                     "cd tech-challenge-flask-app-main",
                     "pip3 install -r requirements.txt --user",
                     "pkill -f gunicorn || true",
