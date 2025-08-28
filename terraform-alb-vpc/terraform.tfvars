@@ -1,1 +1,2 @@
 
+vpc_name = "dev-vpc"
