@@ -8,10 +8,10 @@ pipeline {
         EC2_INSTANCE_ID = "i-0a79c254c58f4272f"       // replace with your EC2 instance-id
     }
 
-    stages {
+stages {
         stage('Deploy via SSM') {
             steps {
-            sh '''
+                sh '''
                 export PATH=/usr/local/bin:$PATH
                 echo "Triggering SSM command on EC2 to redeploy app..."
 
