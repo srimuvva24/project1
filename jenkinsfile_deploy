@@ -22,6 +22,7 @@ pipeline {
                     "cd /home/ec2-user",
                     "aws s3 cp s3://'$S3_BUCKET'/'$S3_OBJECT' /home/ec2-user/",
                     "rm -rf tech-challenge-flask-app-main || true",
+                     "rm -f tech-challenge-flask-app-main.zip || true",
                     "unzip -o /home/ec2-user/'$S3_OBJECT' -d tech-challenge-flask-app-main",
                     "cd tech-challenge-flask-app-main",
                     "pip3 install -r requirements.txt --user",
