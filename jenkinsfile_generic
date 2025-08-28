@@ -33,30 +33,26 @@ pipeline {
             }
         }
 
-        stage('Terraform Plan/Approval') {
+        stage('Terraform Plan + Approval + Apply') {
             steps {
                 dir("${params.TF_DIR}") {
                     script {
                         if (params.ACTION == 'apply') {
                             sh "terraform plan -var 'aws_region=${AWS_REGION}' -out=tfplan"
+
+                            // Pause for approval
+                            input message: "Do you want to proceed with APPLY?", ok: 'Proceed'
+
+                            // Apply after approval
+                            sh "terraform apply -auto-approve tfplan"
+
                         } else if (params.ACTION == 'destroy') {
                             sh "terraform plan -destroy -var 'aws_region=${AWS_REGION}' -out=tfplan"
-                        }
 
-                        // Pause for user approval
-                        input message: "Do you want to proceed with ${params.ACTION}?", ok: 'Proceed', submitter: 'admin'
-                    }
-                }
-            }
-        }
+                            // Pause for approval
+                            input message: "Do you want to proceed with DESTROY?", ok: 'Proceed'
 
-        stage('Terraform Apply/Destroy') {
-            steps {
-                dir("${params.TF_DIR}") {
-                    script {
-                        if (params.ACTION == 'apply') {
-                            sh "terraform apply -auto-approve tfplan"
-                        } else if (params.ACTION == 'destroy') {
+                            // Destroy after approval
                             sh "terraform destroy -auto-approve -var 'aws_region=${AWS_REGION}'"
                         }
                     }
