@@ -1,5 +1,9 @@
 pipeline {
     agent any
+
+    parameters {
+        string(name: 'EC2_INSTANCE_ID', defaultValue: '', description: 'Enter the EC2 Instance ID')
+    }
     environment {
         AWS_DEFAULT_REGION = "us-east-2"
         S3_BUCKET = "tf-sanity-test-bucket-c0866eaf"
