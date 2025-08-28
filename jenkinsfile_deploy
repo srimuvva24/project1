@@ -43,6 +43,7 @@ pipeline {
                             "echo Stopping existing gunicorn processes...",
                             "pkill -f gunicorn || true",
                             "sleep 2",
+                            "export TC_DYNAMO_TABLE=Candidates",
                             "echo Starting new gunicorn process...",
                             "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
                             "echo Deployment completed successfully!"
