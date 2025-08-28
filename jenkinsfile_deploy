@@ -16,7 +16,7 @@ stages {
                 echo "Triggering SSM command on EC2 to redeploy app..."
 
                   aws ssm send-command \
-                  --targets "Key=instanceIds,Values=$EC2_INSTANCE_ID" \
+                  --targets "Key=tag:Name,Values=$EC2_INSTANCE_ID" \
                   --document-name "AWS-RunShellScript" \
                   --comment "Deploy Flask App" \
                   --parameters 'commands=[
