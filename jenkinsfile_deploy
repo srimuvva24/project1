@@ -16,27 +16,27 @@ pipeline {
                   --document-name "AWS-RunShellScript" \
                   --comment "Deploy Flask App" \
                   --parameters 'commands=[
-                    "echo \"Starting deployment process...\"",
+                    "echo Starting deployment process...",
                     "cd /home/ec2-user/sri",
-                    "echo \"Current directory: $(pwd)\"",
-                    "echo \"Downloading from S3...\"",
+                    "echo Current directory: $(pwd)",
+                    "echo Downloading from S3...",
                     "aws s3 cp s3://'"$S3_BUCKET"'/'"$S3_OBJECT"' . --region '"$AWS_DEFAULT_REGION"'",
-                    "echo \"Download completed. Checking file...\"",
+                    "echo Download completed. Checking file...",
                     "ls -la '"$S3_OBJECT"'",
-                    "echo \"Extracting application...\"",
+                    "echo Extracting application...",
                     "rm -rf tech-challenge-flask-app-main",
                     "unzip -o '"$S3_OBJECT"'",
-                    "echo \"Extraction completed. Contents:\"",
+                    "echo Extraction completed. Contents:",
                     "ls -la",
                     "cd tech-challenge-flask-app-main",
-                    "echo \"Installing requirements...\"",
+                    "echo Installing requirements...",
                     "pip3 install -r requirements.txt --user",
-                    "echo \"Stopping existing gunicorn processes...\"",
+                    "echo Stopping existing gunicorn processes...",
                     "pkill -f gunicorn || true",
                     "sleep 2",
-                    "echo \"Starting new gunicorn process...\"",
+                    "echo Starting new gunicorn process...",
                     "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
-                    "echo \"Deployment completed successfully!\""
+                    "echo Deployment completed successfully!"
                   ]'
                 '''
             }
