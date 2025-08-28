@@ -7,7 +7,7 @@ pipeline {
         S3_BUCKET = 'tf-sanity-test-bucket-c0866eaf'
         S3_OBJECT = 'tech-challenge-flask-app-main.zip'
         APP_DIR = '/home/ec2-user/sri1'
-        SSH_CREDENTIAL_ID = 'jenkins-ssh-key-id' // Jenkins credential ID
+        SSH_CREDENTIAL_ID = '409c4f58-a003-41fa-8c49-8cb4bf571878' // Jenkins credential ID
     }
 
     stages {
