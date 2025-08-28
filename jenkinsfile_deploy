@@ -15,22 +15,22 @@ pipeline {
                     
                     // Send SSM command and capture command ID
                     def commandId = sh(
-                        script: """
-                        aws ssm send-command \
-                          --instance-ids "${EC2_INSTANCE_ID}" \
-                          --document-name "AWS-RunShellScript" \
-                          --comment "Deploy Flask App" \
+                        script: '''
+                        aws ssm send-command \\
+                          --instance-ids "''' + EC2_INSTANCE_ID + '''" \\
+                          --document-name "AWS-RunShellScript" \\
+                          --comment "Deploy Flask App" \\
                           --parameters 'commands=[
                             "echo Starting deployment process...",
                             "cd /home/ec2-user/sri",
-                            "echo Current directory: \\$(pwd)",
+                            "echo Current directory: $(pwd)",
                             "echo Downloading from S3...",
-                            "aws s3 cp s3://${S3_BUCKET}/${S3_OBJECT} . --region ${AWS_DEFAULT_REGION}",
+                            "aws s3 cp s3://''' + S3_BUCKET + '''/''' + S3_OBJECT + ''' . --region ''' + AWS_DEFAULT_REGION + '''",
                             "echo Download completed. Checking file...",
-                            "ls -la ${S3_OBJECT}",
+                            "ls -la ''' + S3_OBJECT + '''",
                             "echo Extracting application...",
                             "rm -rf tech-challenge-flask-app-main",
-                            "unzip -o ${S3_OBJECT}",
+                            "unzip -o ''' + S3_OBJECT + '''",
                             "echo Extraction completed. Contents:",
                             "ls -la",
                             "cd tech-challenge-flask-app-main",
@@ -42,10 +42,10 @@ pipeline {
                             "echo Starting new gunicorn process...",
                             "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
                             "echo Deployment completed successfully!"
-                          ]' \
-                          --query 'Command.CommandId' \
+                          ]' \\
+                          --query 'Command.CommandId' \\
                           --output text
-                        """,
+                        ''',
                         returnStdout: true
                     ).trim()
                     
@@ -58,34 +58,34 @@ pipeline {
                     // Check command execution results
                     echo "Checking command execution results..."
                     def executionResult = sh(
-                        script: """
-                        aws ssm get-command-invocation \
-                          --command-id "${commandId}" \
-                          --instance-id "${EC2_INSTANCE_ID}" \
-                          --query 'Status' \
+                        script: '''
+                        aws ssm get-command-invocation \\
+                          --command-id "''' + commandId + '''" \\
+                          --instance-id "''' + EC2_INSTANCE_ID + '''" \\
+                          --query 'Status' \\
                           --output text
-                        """,
+                        ''',
                         returnStdout: true
                     ).trim()
                     
                     echo "Command Status: ${executionResult}"
                     
                     // Get detailed output
-                    sh """
+                    sh '''
                     echo "=== Command Output ==="
-                    aws ssm get-command-invocation \
-                      --command-id "${commandId}" \
-                      --instance-id "${EC2_INSTANCE_ID}" \
-                      --query 'StandardOutputContent' \
+                    aws ssm get-command-invocation \\
+                      --command-id "''' + commandId + '''" \\
+                      --instance-id "''' + EC2_INSTANCE_ID + '''" \\
+                      --query 'StandardOutputContent' \\
                       --output text
                     
                     echo "=== Command Errors (if any) ==="
-                    aws ssm get-command-invocation \
-                      --command-id "${commandId}" \
-                      --instance-id "${EC2_INSTANCE_ID}" \
-                      --query 'StandardErrorContent' \
+                    aws ssm get-command-invocation \\
+                      --command-id "''' + commandId + '''" \\
+                      --instance-id "''' + EC2_INSTANCE_ID + '''" \\
+                      --query 'StandardErrorContent' \\
                       --output text
-                    """
+                    '''
                     
                     // Check if command succeeded
                     if (executionResult != 'Success') {
@@ -104,19 +104,19 @@ pipeline {
                     
                     // Optional: Add a health check
                     def healthCheckCommand = sh(
-                        script: """
-                        aws ssm send-command \
-                          --instance-ids "${EC2_INSTANCE_ID}" \
-                          --document-name "AWS-RunShellScript" \
-                          --comment "Health Check" \
+                        script: '''
+                        aws ssm send-command \\
+                          --instance-ids "''' + EC2_INSTANCE_ID + '''" \\
+                          --document-name "AWS-RunShellScript" \\
+                          --comment "Health Check" \\
                           --parameters 'commands=[
                             "echo Checking application status...",
                             "ps aux | grep gunicorn | grep -v grep || echo No gunicorn process found",
-                            "curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000 || echo Application not responding"
-                          ]' \
-                          --query 'Command.CommandId' \
+                            "curl -s -o /dev/null -w \\"%{http_code}\\" http://localhost:8000 || echo Application not responding"
+                          ]' \\
+                          --query 'Command.CommandId' \\
                           --output text
-                        """,
+                        ''',
                         returnStdout: true
                     ).trim()
                     
@@ -124,14 +124,14 @@ pipeline {
                     sleep(time: 10, unit: 'SECONDS')
                     
                     // Show health check results
-                    sh """
+                    sh '''
                     echo "=== Health Check Results ==="
-                    aws ssm get-command-invocation \
-                      --command-id "${healthCheckCommand}" \
-                      --instance-id "${EC2_INSTANCE_ID}" \
-                      --query 'StandardOutputContent' \
+                    aws ssm get-command-invocation \\
+                      --command-id "''' + healthCheckCommand + '''" \\
+                      --instance-id "''' + EC2_INSTANCE_ID + '''" \\
+                      --query 'StandardOutputContent' \\
                       --output text
-                    """
+                    '''
                 }
             }
         }
