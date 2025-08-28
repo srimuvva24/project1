@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         EC2_USER = 'ec2-user'
-        EC2_HOST = '<EC2_PUBLIC_IP>'   // Replace with your instance IP
+        EC2_HOST = 'i-0af76ca1958102017'   // Replace with your instance IP
         S3_BUCKET = 'tf-sanity-test-bucket-c0866eaf'
         S3_OBJECT = 'tech-challenge-flask-app-main.zip'
-        APP_DIR = '/home/ec2-user/sri'
+        APP_DIR = '/home/ec2-user/sri1'
         SSH_CREDENTIAL_ID = 'jenkins-ssh-key-id' // Jenkins credential ID
     }
 
@@ -23,8 +23,6 @@ pipeline {
                         # Download latest code from S3
                         aws s3 cp s3://${S3_BUCKET}/${S3_OBJECT} ${APP_DIR}/
 
-                        # Remove previous deployment
-                        rm -rf tech-challenge-flask-app-main || true
 
                         # Unzip new version
                         unzip -o ${APP_DIR}/${S3_OBJECT} -d tech-challenge-flask-app-main
