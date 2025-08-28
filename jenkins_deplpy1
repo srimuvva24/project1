@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        EC2_USER = 'ec2-user'
+        EC2_HOST = '<EC2_PUBLIC_IP>'   // Replace with your instance IP
+        S3_BUCKET = 'tf-sanity-test-bucket-c0866eaf'
+        S3_OBJECT = 'tech-challenge-flask-app-main.zip'
+        APP_DIR = '/home/ec2-user/sri'
+        SSH_CREDENTIAL_ID = 'jenkins-ssh-key-id' // Jenkins credential ID
+    }
+
+    stages {
+        stage('Deploy Flask App') {
+            steps {
+                sshagent([env.SSH_CREDENTIAL_ID]) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+                        # Create app directory if missing
+                        mkdir -p ${APP_DIR}
+                        cd ${APP_DIR}
+
+                        # Download latest code from S3
+                        aws s3 cp s3://${S3_BUCKET}/${S3_OBJECT} ${APP_DIR}/
+
+                        # Remove previous deployment
+                        rm -rf tech-challenge-flask-app-main || true
+
+                        # Unzip new version
+                        unzip -o ${APP_DIR}/${S3_OBJECT} -d tech-challenge-flask-app-main
+
+                        # Install Python requirements
+                        cd tech-challenge-flask-app-main
+                        pip3 install -r requirements.txt --user
+
+                        # Restart Gunicorn
+                        pkill -f gunicorn || true
+                        nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > ${APP_DIR}/app.log 2>&1 &
+                    '
+                    """
+                }
+            }
+        }
+    }
+}
