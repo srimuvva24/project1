@@ -45,7 +45,7 @@ pipeline {
                             "echo Installing requirements...",
                             "pip3 install -r requirements.txt --user",
                             "echo Stopping existing gunicorn processes...",
-                            "pkill -f gunicorn || true",
+                            "fuser -k 8000/tcp || true",
                             "sleep 2",
                             "export TC_DYNAMO_TABLE=Candidates",
                             "echo Starting new gunicorn process...",
