@@ -1,14 +1,22 @@
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
 }
 
-resource "aws_dynamodb_table" "candidate_table" {
-  name         = "Candidates"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "CandidateName"
+# Create AMI from existing instance
+resource "aws_ami" "from_existing_instance" {
+  name               = "my-ami-from-${var.ec2_instance_id}-${timestamp()}"
+  source_instance_id = var.ec2_instance_id
+  description        = "AMI created from EC2 instance ${var.ec2_instance_id}"
+  # Optional: reboot the instance before creating AMI
+  reboot = true
 
-  attribute {
-    name = "CandidateName"
-    type = "S"
+  tags = {
+    Name = "AMI-from-${var.ec2_instance_id}"
   }
+}
+
+# Output the AMI ID
+output "ami_id" {
+  value       = aws_ami.from_existing_instance.id
+  description = "The ID of the created AMI"
 }
