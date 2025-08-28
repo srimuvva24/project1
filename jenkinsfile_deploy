@@ -12,7 +12,7 @@ stages {
         stage('Deploy via SSM') {
             steps {
                 sh '''
-                //export PATH=/usr/local/bin:$PATH
+               
                 echo "Triggering SSM command on EC2 to redeploy app..."
 
                   aws ssm send-command \
