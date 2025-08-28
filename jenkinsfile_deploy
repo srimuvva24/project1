@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Deploy via SSM') {
             steps {
-                sh '''
+            sh '''
                 export PATH=/usr/local/bin:$PATH
                 echo "Triggering SSM command on EC2 to redeploy app..."
 
@@ -21,11 +21,8 @@ pipeline {
                   --comment "Deploy Flask App" \
                   --parameters 'commands=[
                     "cd /home/ec2-user",
-                    "rm -rf tech-challenge-flask-app-main || true",
-                    "rm -f '$S3_OBJECT' || true",
                     "aws s3 cp s3://'$S3_BUCKET'/'$S3_OBJECT' /home/ec2-user/",
-                    "mkdir -p tech-challenge-flask-app-main",
-                    "unzip -o /home/ec2-user/'$S3_OBJECT' -d tech-challenge-flask-app-main --strip-components 1",
+                    "unzip -o /home/ec2-user/'$S3_OBJECT' -d tech-challenge-flask-app-main",
                     "cd tech-challenge-flask-app-main",
                     "pip3 install -r requirements.txt --user",
                     "pkill -f gunicorn || true",
