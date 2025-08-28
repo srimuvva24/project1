@@ -5,7 +5,7 @@ pipeline {
         AWS_DEFAULT_REGION = "us-east-1"   // change if needed
         S3_BUCKET = "tf-sanity-test-bucket-c0866eaf"
         S3_OBJECT = "tech-challenge-flask-app-main.zip"
-        EC2_INSTANCE_ID = "<EC2-ID>"       // replace with your EC2 instance-id
+        EC2_INSTANCE_ID = "i-0a79c254c58f4272f"       // replace with your EC2 instance-id
     }
 
     stages {
