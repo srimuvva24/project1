@@ -22,7 +22,7 @@ pipeline {
                           --comment "Deploy Flask App" \\
                           --parameters 'commands=[
                             "echo Starting deployment process...",
-                            "cd /home/ec2-user/sri",
+                            "cd /home/ec2-user",
                             "echo Current directory: $(pwd)",
                             "echo Downloading from S3...",
                             "aws s3 cp s3://''' + S3_BUCKET + '''/''' + S3_OBJECT + ''' . --region ''' + AWS_DEFAULT_REGION + '''",
