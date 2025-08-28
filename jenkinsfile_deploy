@@ -12,9 +12,10 @@ pipeline {
         stage('Deploy via SSM') {
             steps {
                 sh '''
+                export PATH=/usr/local/bin:$PATH
                 echo "Triggering SSM command on EC2 to redeploy app..."
 
-                /usr/local/bin/aws ssm send-command \
+                  aws ssm send-command \
                   --targets "Key=instanceIds,Values=$EC2_INSTANCE_ID" \
                   --document-name "AWS-RunShellScript" \
                   --comment "Deploy Flask App" \
