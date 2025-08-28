@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
 # Create AMI from existing instance
 resource "aws_ami" "from_existing_instance" {
   name               = "my-ami-from-${var.ec2_instance_id}-${timestamp()}"
