@@ -2,17 +2,27 @@ pipeline {
     agent any
 
     parameters {
+        string(
+            name: 'GIT_URL',
+            defaultValue: '',
+            description: 'GitHub repository URL to clone'
+        )
+        string(
+            name: 'GIT_BRANCH',
+            defaultValue: '',
+            description: 'Git branch to checkout'
+        )
+       string(
+            name: 'TF_DIR',
+            defaultValue: '',
+            description: 'Terraform directory to execute'
+        )
         choice(
             name: 'ACTION',
             choices: ['apply', 'destroy'],
             description: 'Select whether to apply or destroy Terraform resources'
         )
-        string(
-            name: 'TF_DIR',
-            defaultValue: '',
-            description: 'Terraform directory to execute'
-        )
-    }
+       }
 
     environment {
         AWS_REGION = 'us-east-2'
@@ -21,7 +31,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/srimuvva24/project1.git'
+               // git branch: 'main', url: 'https://github.com/srimuvva24/project1.git'
+                git branch: "${params.GIT_BRANCH}", url: "${params.GIT_URL}"
             }
         }
 
