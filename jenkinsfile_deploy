@@ -20,9 +20,9 @@ stages {
                   --document-name "AWS-RunShellScript" \
                   --comment "Deploy Flask App" \
                   --parameters 'commands=[
-                    "cd /home/ec2-user",
+                    "cd /home/ec2-user/sri",
                     "aws s3 cp s3://'$S3_BUCKET'/'$S3_OBJECT' /home/ec2-user/sri",
-                    "unzip -o /home/ec2-user/'$S3_OBJECT' -d tech-challenge-flask-app-main",
+                    "unzip -o /home/ec2-user/sri/'$S3_OBJECT' -d tech-challenge-flask-app-main",
                     "cd tech-challenge-flask-app-main",
                     "pip3 install -r requirements.txt --user",
                     "pkill -f gunicorn || true",
