@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Select whether to apply or destroy Terraform resources'
+        )
+        string(
+            name: 'TF_DIR',
+            defaultValue: '',
+            description: 'Terraform directory to execute'
+        )
+    }
+
+    environment {
+        AWS_REGION = 'us-east-2'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/srimuvva24/project1.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan/Approval') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh "terraform plan -var 'aws_region=${AWS_REGION}' -out=tfplan"
+                        } else if (params.ACTION == 'destroy') {
+                            sh "terraform plan -destroy -var 'aws_region=${AWS_REGION}' -out=tfplan"
+                        }
+
+                        // Pause for user approval
+                        input message: "Do you want to proceed with ${params.ACTION}?", ok: 'Proceed', submitter: 'admin'
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Apply/Destroy') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh "terraform apply -auto-approve tfplan"
+                        } else if (params.ACTION == 'destroy') {
+                            sh "terraform destroy -auto-approve -var 'aws_region=${AWS_REGION}'"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline execution finished for action: ${params.ACTION} in directory: ${params.TF_DIR}"
+        }
+    }
+}
