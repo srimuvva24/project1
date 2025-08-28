@@ -1,32 +1,42 @@
 pipeline {
     agent any
-
     environment {
-        AWS_DEFAULT_REGION = "us-east-2"   // change if needed
+        AWS_DEFAULT_REGION = "us-east-2"
         S3_BUCKET = "tf-sanity-test-bucket-c0866eaf"
         S3_OBJECT = "tech-challenge-flask-app-main.zip"
-        EC2_INSTANCE_ID = "FlaskAppServer"       // replace with your EC2 instance-id
+        EC2_INSTANCE_ID = "FlaskAppServer"
     }
-
-stages {
+    stages {
         stage('Deploy via SSM') {
             steps {
                 sh '''
-               
                 echo "Triggering SSM command on EC2 to redeploy app..."
-
-                  aws ssm send-command \
+                aws ssm send-command \
                   --targets "Key=tag:Name,Values=i-0af76ca1958102017" \
                   --document-name "AWS-RunShellScript" \
                   --comment "Deploy Flask App" \
                   --parameters 'commands=[
+                    "echo \"Starting deployment process...\"",
                     "cd /home/ec2-user/sri",
-                    "aws s3 cp s3://'$S3_BUCKET'/'$S3_OBJECT' /home/ec2-user/sri",
-                    "unzip -o /home/ec2-user/sri/'$S3_OBJECT' -d tech-challenge-flask-app-main",
+                    "echo \"Current directory: $(pwd)\"",
+                    "echo \"Downloading from S3...\"",
+                    "aws s3 cp s3://'"$S3_BUCKET"'/'"$S3_OBJECT"' . --region '"$AWS_DEFAULT_REGION"'",
+                    "echo \"Download completed. Checking file...\"",
+                    "ls -la '"$S3_OBJECT"'",
+                    "echo \"Extracting application...\"",
+                    "rm -rf tech-challenge-flask-app-main",
+                    "unzip -o '"$S3_OBJECT"'",
+                    "echo \"Extraction completed. Contents:\"",
+                    "ls -la",
                     "cd tech-challenge-flask-app-main",
+                    "echo \"Installing requirements...\"",
                     "pip3 install -r requirements.txt --user",
+                    "echo \"Stopping existing gunicorn processes...\"",
                     "pkill -f gunicorn || true",
-                    "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &"
+                    "sleep 2",
+                    "echo \"Starting new gunicorn process...\"",
+                    "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
+                    "echo \"Deployment completed successfully!\""
                   ]'
                 '''
             }
