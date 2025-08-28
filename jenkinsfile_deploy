@@ -4,42 +4,148 @@ pipeline {
         AWS_DEFAULT_REGION = "us-east-2"
         S3_BUCKET = "tf-sanity-test-bucket-c0866eaf"
         S3_OBJECT = "tech-challenge-flask-app-main.zip"
-        EC2_INSTANCE_ID = "FlaskAppServer"
+        EC2_INSTANCE_ID = "i-0af76ca1958102017"
     }
+    
     stages {
         stage('Deploy via SSM') {
             steps {
-                sh '''
-                echo "Triggering SSM command on EC2 to redeploy app..."
-                aws ssm send-command \
-                  --targets "Key=tag:Name,Values=i-0af76ca1958102017" \
-                  --document-name "AWS-RunShellScript" \
-                  --comment "Deploy Flask App" \
-                  --parameters 'commands=[
-                    "echo Starting deployment process...",
-                    "cd /home/ec2-user/sri",
-                    "echo Current directory: $(pwd)",
-                    "echo Downloading from S3...",
-                    "aws s3 cp s3://'"$S3_BUCKET"'/'"$S3_OBJECT"' . --region '"$AWS_DEFAULT_REGION"'",
-                    "echo Download completed. Checking file...",
-                    "ls -la '"$S3_OBJECT"'",
-                    "echo Extracting application...",
-                    "rm -rf tech-challenge-flask-app-main",
-                    "unzip -o '"$S3_OBJECT"'",
-                    "echo Extraction completed. Contents:",
-                    "ls -la",
-                    "cd tech-challenge-flask-app-main",
-                    "echo Installing requirements...",
-                    "pip3 install -r requirements.txt --user",
-                    "echo Stopping existing gunicorn processes...",
-                    "pkill -f gunicorn || true",
-                    "sleep 2",
-                    "echo Starting new gunicorn process...",
-                    "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
-                    "echo Deployment completed successfully!"
-                  ]'
-                '''
+                script {
+                    echo "Triggering SSM command on EC2 to redeploy app..."
+                    
+                    // Send SSM command and capture command ID
+                    def commandId = sh(
+                        script: """
+                        aws ssm send-command \
+                          --instance-ids "${EC2_INSTANCE_ID}" \
+                          --document-name "AWS-RunShellScript" \
+                          --comment "Deploy Flask App" \
+                          --parameters 'commands=[
+                            "echo Starting deployment process...",
+                            "cd /home/ec2-user/sri",
+                            "echo Current directory: \\$(pwd)",
+                            "echo Downloading from S3...",
+                            "aws s3 cp s3://${S3_BUCKET}/${S3_OBJECT} . --region ${AWS_DEFAULT_REGION}",
+                            "echo Download completed. Checking file...",
+                            "ls -la ${S3_OBJECT}",
+                            "echo Extracting application...",
+                            "rm -rf tech-challenge-flask-app-main",
+                            "unzip -o ${S3_OBJECT}",
+                            "echo Extraction completed. Contents:",
+                            "ls -la",
+                            "cd tech-challenge-flask-app-main",
+                            "echo Installing requirements...",
+                            "pip3 install -r requirements.txt --user",
+                            "echo Stopping existing gunicorn processes...",
+                            "pkill -f gunicorn || true",
+                            "sleep 2",
+                            "echo Starting new gunicorn process...",
+                            "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
+                            "echo Deployment completed successfully!"
+                          ]' \
+                          --query 'Command.CommandId' \
+                          --output text
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "SSM Command ID: ${commandId}"
+                    
+                    // Wait for command to complete
+                    echo "Waiting for command to execute..."
+                    sleep(time: 30, unit: 'SECONDS')
+                    
+                    // Check command execution results
+                    echo "Checking command execution results..."
+                    def executionResult = sh(
+                        script: """
+                        aws ssm get-command-invocation \
+                          --command-id "${commandId}" \
+                          --instance-id "${EC2_INSTANCE_ID}" \
+                          --query 'Status' \
+                          --output text
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "Command Status: ${executionResult}"
+                    
+                    // Get detailed output
+                    sh """
+                    echo "=== Command Output ==="
+                    aws ssm get-command-invocation \
+                      --command-id "${commandId}" \
+                      --instance-id "${EC2_INSTANCE_ID}" \
+                      --query 'StandardOutputContent' \
+                      --output text
+                    
+                    echo "=== Command Errors (if any) ==="
+                    aws ssm get-command-invocation \
+                      --command-id "${commandId}" \
+                      --instance-id "${EC2_INSTANCE_ID}" \
+                      --query 'StandardErrorContent' \
+                      --output text
+                    """
+                    
+                    // Check if command succeeded
+                    if (executionResult != 'Success') {
+                        error("SSM command failed with status: ${executionResult}")
+                    }
+                    
+                    echo "Deployment completed successfully!"
+                }
             }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    echo "Verifying application is running..."
+                    
+                    // Optional: Add a health check
+                    def healthCheckCommand = sh(
+                        script: """
+                        aws ssm send-command \
+                          --instance-ids "${EC2_INSTANCE_ID}" \
+                          --document-name "AWS-RunShellScript" \
+                          --comment "Health Check" \
+                          --parameters 'commands=[
+                            "echo Checking application status...",
+                            "ps aux | grep gunicorn | grep -v grep || echo No gunicorn process found",
+                            "curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000 || echo Application not responding"
+                          ]' \
+                          --query 'Command.CommandId' \
+                          --output text
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "Health Check Command ID: ${healthCheckCommand}"
+                    sleep(time: 10, unit: 'SECONDS')
+                    
+                    // Show health check results
+                    sh """
+                    echo "=== Health Check Results ==="
+                    aws ssm get-command-invocation \
+                      --command-id "${healthCheckCommand}" \
+                      --instance-id "${EC2_INSTANCE_ID}" \
+                      --query 'StandardOutputContent' \
+                      --output text
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check the logs above for details."
+        }
+        always {
+            echo "Pipeline execution finished."
         }
     }
 }
