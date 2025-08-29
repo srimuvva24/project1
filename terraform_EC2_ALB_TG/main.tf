@@ -91,14 +91,14 @@ resource "aws_instance" "web" {
 # ---------------------------
 resource "aws_lb" "app_lb" {
   count              = var.create_alb ? 1 : 0
-  name               = "flask-alb-2"
+  name               = var.alb_name
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_sg.id]
   subnets            = data.aws_subnets.custom.ids
 
   tags = {
-    Name = "flask-alb-2"
+    Name = var.alb_name
   }
 }
 
