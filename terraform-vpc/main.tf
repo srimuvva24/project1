@@ -34,7 +34,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "my-igw"
+    Name = var.igw_name
   }
 }
 
