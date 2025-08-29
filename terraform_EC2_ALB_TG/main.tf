@@ -9,7 +9,7 @@ provider "aws" {
 # Data sources for custom VPC
 # ---------------------------
 data "aws_vpc" "custom" {
-  id = "vpc-01a41952ad8fdc4f9"  # Your custom VPC
+  id = var.vpc_id  
 }
 
 data "aws_subnets" "custom" {
