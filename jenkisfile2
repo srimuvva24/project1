@@ -70,7 +70,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        timeout(time: 5, unit: 'MINUTES') {
+                        timeout(time: 1, unit: 'MINUTES') {
                             input message: "Review the Terraform plan above. Proceed with ${params.ACTION}?", ok: "Apply"
                         }
                     } catch (err) {
