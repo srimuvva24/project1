@@ -9,6 +9,12 @@ variable "vpc_name" {
   default     = "my-vpc"
 }
 
+variable "igw_name" {
+  description = "Name of the IGW"
+  type        = string
+  default     = "my-vpc"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
