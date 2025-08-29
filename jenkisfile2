@@ -1,0 +1,108 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'GIT_URL',
+            defaultValue: '',
+            description: 'GitHub repository URL to clone'
+        )
+        string(
+            name: 'GIT_BRANCH',
+            defaultValue: '',
+            description: 'Git branch to checkout'
+        )
+        string(
+            name: 'TF_DIR',
+            defaultValue: '',
+            description: 'Terraform directory to execute'
+        )
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Select whether to apply or destroy Terraform resources'
+        )
+    }
+
+    environment {
+        AWS_REGION = 'us-east-2'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: "${params.GIT_BRANCH}", url: "${params.GIT_URL}"
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    sh 'terraform fmt -recursive'
+                    sh 'terraform validate'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${params.TF_DIR}") {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh "terraform plan -var 'aws_region=${AWS_REGION}' -out=tfplan"
+                        } else if (params.ACTION == 'destroy') {
+                            sh "terraform plan -destroy -var 'aws_region=${AWS_REGION}' -out=tfplan"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Approval Before Apply/Destroy') {
+            steps {
+                script {
+                    try {
+                        timeout(time: 5, unit: 'MINUTES') {
+                            input message: "Review the Terraform plan above. Proceed with ${params.ACTION}?", ok: "Apply"
+                        }
+                    } catch (err) {
+                        echo "⏳ No approval received in 5 minutes (or manually aborted). Pipeline ending gracefully."
+                        currentBuild.result = 'ABORTED'
+                        error("Pipeline aborted by user or timeout")
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Apply/Destroy') {
+            when {
+                expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') }
+            }
+            steps {
+                dir("${params.TF_DIR}") {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh "terraform apply -auto-approve tfplan"
+                        } else if (params.ACTION == 'destroy') {
+                            sh "terraform destroy -auto-approve -var 'aws_region=${AWS_REGION}'"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline execution finished for action: ${params.ACTION} in directory: ${params.TF_DIR}"
+        }
+    }
+}
