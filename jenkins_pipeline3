@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'INSTANCE_ID', defaultValue: '', description: 'EC2 Instance ID')
+    }
+    stages {
+        stage('Deploy Flask App via SSM') {
+            steps {
+                script {
+                    // Fixed S3 bucket and object key
+                    def s3Bucket = "tf-sanity-test-bucket-c0866eaf"
+                    def s3Key    = "tech-challenge-flask-app-main.zip"
+
+                    def commands = '''
+cd /home/ec2-user
+echo "Downloading application from S3..."
+aws s3 cp s3://''' + s3Bucket + '''/''' + s3Key + ''' ./ --region us-east-2
+rm -rf tech-challenge-flask-app-main
+unzip -o tech-challenge-flask-app-main.zip
+sudo chown -R ec2-user:ec2-user tech-challenge-flask-app-main/
+cd tech-challenge-flask-app-main
+echo "Creating virtual environment..."
+python3 -m venv venv
+echo "Activating virtual environment and installing requirements..."
+source venv/bin/activate && pip install requests==2.32.4
+echo "Stopping any existing Gunicorn processes..."
+fuser -k 8000/tcp || true
+sleep 2
+export TC_DYNAMO_TABLE=Candidates
+echo "Starting Gunicorn..."
+nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &
+echo "Deployment completed successfully!"
+'''
+
+                    sh """
+aws ssm send-command \
+    --instance-ids ${params.INSTANCE_ID} \
+    --document-name AWS-RunShellScript \
+    --comment "Deploy Flask App" \
+    --parameters 'commands=["${commands.replaceAll("\\n","\\\\n").replaceAll("\"","\\\\\"")}"]' \
+    --query Command.CommandId --output text
+"""
+                }
+            }
+        }
+    }
+}
