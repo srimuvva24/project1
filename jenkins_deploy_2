@@ -33,7 +33,6 @@ pipeline {
                             "echo Download completed. Checking file...",
                             "ls -la ''' + S3_OBJECT + '''",
                             "echo Extracting application...",
-                            "rm -rf tech-challenge-flask-app-main",
                             "unzip -o ''' + S3_OBJECT + '''",
                             "echo Extraction completed. Contents:",
                             "ls -la",
