@@ -49,6 +49,7 @@ pipeline {
                             "fuser -k 8000/tcp || true",
                             "sleep 2",
                             "export TC_DYNAMO_TABLE=Candidates",
+                            "pip install requests==2.32.4",
                             "echo Starting new gunicorn process...",
                             "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app & > /home/ec2-user/app.log 2>&1 &",
                             "echo Deployment completed successfully!"
