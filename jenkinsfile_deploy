@@ -37,7 +37,7 @@ pipeline {
                             "unzip -o ''' + S3_OBJECT + '''",
                             "echo Extraction completed. Contents:",
                             "ls -la",
-                            "chown -R ec2-user:ec2-user tech-challenge-flask-app-main/"
+                            "chown -R ec2-user:ec2-user tech-challenge-flask-app-main/",
                             "cd tech-challenge-flask-app-main",
                             "echo Creating virtual environment...",
                             "python3 -m venv venv",
