@@ -40,6 +40,7 @@ pipeline {
                             "cd tech-challenge-flask-app-main",
                             "echo Creating virtual environment...",
                             "python3 -m venv venv",
+                            "chown -R ec2-user:ec2-user venv/
                             "echo Activating virtual environment...",
                             "source venv/bin/activate",
                             "echo Installing requirements...",
