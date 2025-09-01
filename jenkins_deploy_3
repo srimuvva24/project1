@@ -7,7 +7,7 @@ pipeline {
     environment {
         AWS_DEFAULT_REGION = "us-east-2"
         S3_BUCKET = "tf-sanity-test-bucket-c0866eaf"
-        S3_OBJECT = "tech-challenge-flask-app-main1.zip"
+        S3_OBJECT = "tech-challenge-flask-app-main.zip"
     }
     
     stages {
