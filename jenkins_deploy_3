@@ -1,0 +1,163 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'EC2_INSTANCE_ID', defaultValue: '', description: 'Enter the EC2 Instance ID')
+    }
+    environment {
+        AWS_DEFAULT_REGION = "us-east-2"
+        S3_BUCKET = "tf-sanity-test-bucket-c0866eaf"
+        S3_OBJECT = "tech-challenge-flask-app-main.zip"
+    }
+    
+    stages {
+        stage('Validate Parameters') {
+            steps {
+                script {
+                    if (!params.EC2_INSTANCE_ID) {
+                        error("EC2_INSTANCE_ID parameter is required")
+                    }
+                    echo "Using EC2 Instance ID: ${params.EC2_INSTANCE_ID}"
+                }
+            }
+        }
+        
+        stage('Deploy via SSM') {
+            steps {
+                script {
+                    echo "Triggering SSM command on EC2 to redeploy app..."
+                    
+                    // Send SSM command and capture command ID
+                    def commandId = sh(
+                        script: '''
+                        aws ssm send-command \\
+                          --instance-ids "''' + params.EC2_INSTANCE_ID + '''" \\
+                          --document-name "AWS-RunShellScript" \\
+                          --comment "Deploy Flask App" \\
+                          --parameters 'commands=[
+                            "set -e",
+                            "echo Starting deployment process...",
+                            "cd /home/ec2-user",
+                            "echo Current directory: $(pwd)",
+                            "echo User: $(whoami)",
+                            "echo AWS CLI version: $(aws --version)",
+                            "echo Checking AWS credentials...",
+                            "aws sts get-caller-identity || echo AWS credentials not configured",
+                            "echo Downloading from S3...",
+                            "echo S3 URL: s3://''' + S3_BUCKET + '''/''' + S3_OBJECT + '''",
+                            "aws s3 ls s3://''' + S3_BUCKET + '''/ --region ''' + AWS_DEFAULT_REGION + ''' || echo Cannot list S3 bucket",
+                            "aws s3 cp s3://''' + S3_BUCKET + '''/''' + S3_OBJECT + ''' . --region ''' + AWS_DEFAULT_REGION + ''' --debug",
+                            "echo Download exit code: $?",
+                            "echo Download completed. Checking file...",
+                            "ls -la ''' + S3_OBJECT + ''' || echo File not found after download",
+                            "if [ ! -f ''' + S3_OBJECT + ''' ]; then echo ERROR: Downloaded file does not exist; exit 1; fi",
+                            "echo File size: $(stat -c%s ''' + S3_OBJECT + ''') bytes",
+                            "echo Extracting application...",
+                            "unzip -o ''' + S3_OBJECT + '''",
+                            "echo Extraction completed. Contents:",
+                            "ls -la",
+                            "if [ ! -d tech-challenge-flask-app-main ]; then echo ERROR: Expected directory not found after extraction; exit 1; fi",
+                            "cd tech-challenge-flask-app-main",
+                            "echo Creating virtual environment...",
+                            "python3 -m venv venv",
+                            "cd ..",
+                            "sudo chown -R ec2-user:ec2-user tech-challenge-flask-app-main/",
+                            "cd tech-challenge-flask-app-main",
+                            "echo Activating virtual environment...",
+                            "source venv/bin/activate",
+                            "echo Stopping existing gunicorn processes...",
+                            "fuser -k 8000/tcp || true",
+                            "sleep 2",
+                            "export TC_DYNAMO_TABLE=Candidates",
+                            "pip install requests==2.32.4",
+                            "echo Starting new gunicorn process...",
+                            "nohup gunicorn -b 0.0.0.0:8000 app:candidates_app > /home/ec2-user/app.log 2>&1 &",
+                            "echo Deployment completed successfully!",
+                            "echo Application log location: /home/ec2-user/app.log"
+                          ]' \\
+                          --query 'Command.CommandId' \\
+                          --output text
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "SSM Command ID: ${commandId}"
+                    
+                    // Wait for command to complete with polling
+                    echo "Waiting for command to execute..."
+                    def maxAttempts = 12 // 2 minutes total (12 * 10 seconds)
+                    def attempt = 0
+                    def status = 'InProgress'
+                    
+                    while (attempt < maxAttempts && status == 'InProgress') {
+                        sleep(time: 10, unit: 'SECONDS')
+                        attempt++
+                        
+                        status = sh(
+                            script: '''
+                            aws ssm get-command-invocation \\
+                              --command-id "''' + commandId + '''" \\
+                              --instance-id "''' + params.EC2_INSTANCE_ID + '''" \\
+                              --query 'Status' \\
+                              --output text 2>/dev/null || echo "Pending"
+                            ''',
+                            returnStdout: true
+                        ).trim()
+                        
+                        echo "Attempt ${attempt}/${maxAttempts}: Command Status: ${status}"
+                    }
+                    
+                    // Get detailed output regardless of status
+                    echo "=== Final Command Status ==="
+                    echo "Status: ${status}"
+                    
+                    echo "=== Command Output ==="
+                    def stdOutput = sh(
+                        script: '''
+                        aws ssm get-command-invocation \\
+                          --command-id "''' + commandId + '''" \\
+                          --instance-id "''' + params.EC2_INSTANCE_ID + '''" \\
+                          --query 'StandardOutputContent' \\
+                          --output text 2>/dev/null || echo "No output available"
+                        ''',
+                        returnStdout: true
+                    )
+                    echo stdOutput
+                    
+                    echo "=== Command Errors ==="
+                    def stdError = sh(
+                        script: '''
+                        aws ssm get-command-invocation \\
+                          --command-id "''' + commandId + '''" \\
+                          --instance-id "''' + params.EC2_INSTANCE_ID + '''" \\
+                          --query 'StandardErrorContent' \\
+                          --output text 2>/dev/null || echo "No errors available"
+                        ''',
+                        returnStdout: true
+                    )
+                    echo stdError
+                    
+                    // Check if command succeeded
+                    if (status != 'Success') {
+                        error("SSM command failed with status: ${status}")
+                    }
+                    
+                    echo "Deployment completed successfully!"
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+            echo "Check application status at: http://<your-ec2-ip>:8000"
+        }
+        failure {
+            echo "Pipeline failed! Check the logs above for details."
+        }
+        always {
+            echo "Pipeline execution finished at: ${new Date()}"
+        }
+    }
+}
