@@ -28,3 +28,8 @@ variable "tg_name" {
   description = "Name of the TargetGroup Name"
   type        = string
 }
+
+variable "ami_id" {
+  description = "Custom AMI ID for EC2 instances"
+  type        = string
+}
