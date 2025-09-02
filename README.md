@@ -15,8 +15,8 @@ The Terraform Generic Job is a flexible Jenkins pipeline designed to deploy and 
 | Parameter | Description | Type | Example |
 |-----------|-------------|------|---------|
 | **GitHub URL** | The URL of the GitHub repository containing the Terraform code | String | `https://github.com/company/terraform-infrastructure` |
-| **Branch** | The branch of the repository to deploy | String | `main`, `develop`, `feature/vpc-update` |
-| **TF_DIR** | The folder name inside the repository where the Terraform code resides | String | `vpc`, `database`, `ec2-alb` |
+| **Branch** | The branch of the repository to deploy | String | `main` |
+| **TF_DIR** | The folder name inside the repository where the Terraform code resides | String | `terraform-vpc` |
 | **Action** | The Terraform action to execute | Choice | `apply` (deploy resources) or `destroy` (delete resources) |
 
 ## Supported Terraform Modules
