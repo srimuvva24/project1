@@ -58,24 +58,7 @@ The `terraform-db` module automates the creation of AWS DynamoDB tables with con
 
 #### Resources Provisioned
 - **DynamoDB Table** – NoSQL database table with configurable attributes
-- **Global Secondary Indexes** (if configured)
-- **Point-in-time Recovery** (optional)
-- **Encryption at Rest** (enabled by default)
-
-#### Required Variables
-
-| Name | Description | Type | Required | Example |
-|------|-------------|------|----------|---------|
-| `table_name` | Name of the DynamoDB table | string | Yes | `"users-table"` |
-| `hash_key` | Primary key for the table | string | Yes | `"id"` |
-| `billing_mode` | Billing mode for the table | string | No | `"PAY_PER_REQUEST"` (default) |
-
-#### Example terraform.tfvars
-```hcl
-table_name = "candidates-table"
-hash_key = "candidate_id"
-billing_mode = "PAY_PER_REQUEST"
-```
+-
 
 ### 3. terraform-ec2-alb-tg
 
