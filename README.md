@@ -94,7 +94,6 @@ The `terraform-ec2-alb-tg` module automates the deployment of a complete web app
 | Name | Description | Type | Required | Example |
 |------|-------------|------|----------|---------|
 | `vpc_id` | ID of the VPC where resources will be created | string | Yes | `"vpc-12345678"` |
-| `subnet_ids` | List of subnet IDs for resource placement | list(string) | Yes | `["subnet-12345", "subnet-67890"]` |
 | `alb_name` | Name for the Application Load Balancer | string | Yes | `"web-app-alb"` |
 | `tg_name` | Name for the Target Group | string | Yes | `"web-app-tg"` |
 | `instance_type` | EC2 instance type | string | No | `"t3.micro"` (default) |
