@@ -39,6 +39,7 @@ The `terraform-vpc` module automates the creation of core AWS networking infrast
 | `vpc_name` | Name of the VPC | string | Yes | `"dev-vpc"` |
 | `vpc_cidr` | CIDR block for the VPC | string | Yes | `"10.0.0.0/16"` |
 | `public_subnet_cidrs` | List of CIDR blocks for public subnets | list(string) | Yes | `["10.0.1.0/24", "10.0.2.0/24"]` |
+| `igw_name` | Name of the Internet Gateway | string | Yes | `"my-igw"` |
 
 #### Example terraform.tfvars
 ```hcl
