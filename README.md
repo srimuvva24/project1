@@ -115,9 +115,6 @@ Follow the same steps but select `destroy` for the Action parameter.
 1. **Access Jenkins**: Navigate to [http://3.14.12.130:8080/job/deploy_code/](http://3.14.12.130:8080/job/deploy_code/)
 2. **Click "Build with Parameters"**
 3. **Fill in Parameters**:
-   - **GitHub URL**: Your repository URL
-   - **Branch**: Target branch (usually `main` or `develop`)
-   - **TF_DIR**: Module directory name (`vpc`, `database`, `ec2-alb`)
-   - **Action**: Select `apply` to create resources
+   - **EC2 Instance ID**: Enter the EC2 Instance ID
 4. **Click "Build"**
 
