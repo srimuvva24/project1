@@ -79,7 +79,6 @@ The `terraform-ec2-alb-tg` module automates the deployment of a complete web app
 | `vpc_id` | ID of the VPC where resources will be created | string | Yes | `"vpc-01a41952ad8fdc4f9"` |
 | `alb_name` | Name for the Application Load Balancer | string | Yes | `"flask-alb-2"` |
 | `tg_name` | Name for the Target Group | string | Yes | `"flask-tg-2"` |
-| `instance_type` | EC2 instance type | string | No | `"t3.micro"` (default) |
 | `ami_id` | Custom AMI ID for EC2 instances | string | Yes | `"ami-0863fb82a7836e852"` |
 
 #### Example terraform.tfvars
