@@ -83,12 +83,11 @@ The `terraform-ec2-alb-tg` module automates the deployment of a complete web app
 
 #### Example terraform.tfvars
 ```hcl
-vpc_id = "vpc-0abcdef123456789"
-subnet_ids = ["subnet-12345678", "subnet-87654321"]
-alb_name = "production-web-alb"
-tg_name = "production-web-tg"
-instance_type = "t3.small"
-ami_id = "ami-0abcdef123456789"
+vpc_id = "vpc-01a41952ad8fdc4f9"
+subnet_ids = ["10.0.1.0/24", "10.0.2.0/24"]
+alb_name = "flask-alb-2"
+tg_name = "flask-tg-2"
+ami_id = "ami-0863fb82a7836e852"
 ```
 
 ## Usage Instructions
