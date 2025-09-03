@@ -112,9 +112,14 @@ Follow the same steps but select `destroy` for the Action parameter.
 
 ### 3. Application code deployment
 
+## Overview
+The Application Code Deployment pipeline automates the deployment of Python Flask applications to EC2 instances. It downloads the latest application code from S3, sets up the runtime environment, and performs sanity validation to ensure successful deployment.
+
 1. **Access Jenkins**: Navigate to [http://3.14.12.130:8080/job/deploy_code/](http://3.14.12.130:8080/job/deploy_code/)
 2. **Click "Build with Parameters"**
 3. **Fill in Parameters**:
    - **EC2 Instance ID**: Enter the EC2 Instance ID
 4. **Click "Build"**
+
+
 
