@@ -112,7 +112,7 @@ Follow the same steps but select `destroy` for the Action parameter.
 
 ### 3. Application code deployment
 
-1. **Access Jenkins**: Navigate to [http://3.14.12.130:8080/job/deploy_code/]
+1. **Access Jenkins**: Navigate to [http://3.14.12.130:8080/job/deploy_code/](http://3.14.12.130:8080/job/deploy_code/)
 2. **Click "Build with Parameters"**
 3. **Fill in Parameters**:
    - **GitHub URL**: Your repository URL
